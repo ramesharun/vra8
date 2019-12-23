@@ -1,0 +1,65 @@
+name: server2016
+version: 0.9
+#added custom password
+inputs:
+  image:
+    type: string
+    description: Image
+    title: OS Image
+    enum:
+      - server2016
+    default: server2016
+  flavor:
+    type: string
+    enum:
+      - small
+      - medium
+      - large
+    description: Size of VM's
+    title: VM Size
+    default: medium
+  region:
+    type: string
+    description: Region
+    title: Region Tag Name
+    enum:
+      - 'region:copenhagen'
+    default: 'region:copenhagen'
+  notify:
+    type: boolean
+    title: Notify
+    description: Notify when deployment is finished
+  password:
+    type: string
+    default: VMware1!
+    title: Password
+    encrypted: true
+    description: Administrator Password
+  count:
+    type: integer
+    description: Number of VM's (1-10)
+    default: 1
+    title: Number of VM
+    minimum: 1
+    maximum: 10
+resources:
+  Cloud_Machine_1:
+    type: Cloud.Machine
+    properties:
+      notify: '${input.notify}'
+      name: '${self.resourceName}'
+      image: '${input.image}'
+      flavor: '${input.flavor}'
+      count: '${input.count}'
+      remoteAccess:
+        authentication: usernamePassword
+        username: Administrator
+        password: '${input.password}'
+      cloudConfig: |
+        #cloud-config
+        set_hostname: '${self.resourceName}'
+      constraints:
+        - tag: '${input.region}'
+      tags:
+        - key: name
+          value: Windows
