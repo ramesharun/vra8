@@ -1,0 +1,146 @@
+name: K8S
+version: 1.5.1
+#Changed version
+inputs:
+  rootpassword:
+    type: string
+    encrypted: true
+    title: Root Password
+    description: Root Password
+    default: VMware1!
+  novm:
+    type: integer
+    description: Number of Node's 1-5
+    title: No. of Node's
+    default: 2
+    maximum: 5
+  image:
+    type: string
+    description: Image
+    title: OS Image
+    enum:
+      - ubuntu
+    default: ubuntu
+  flavor:
+    type: string
+    enum:
+      - medium
+      - large
+    description: Size of VM's
+    title: VM Size
+    default: medium
+resources:
+  k8s_master:
+    type: Cloud.vSphere.Machine
+    properties:
+      image: '${input.image}'
+      flavor: '${input.flavor}'
+      count: '1'
+      name: '${self.resourceName}'
+      constraints:
+        - tag: 'pool:k8s'
+      cloudConfigSettings:
+        #Making sure that cloudconfig is finished, before continue
+        phoneHomeShouldWait: true
+        phoneHomeTimeoutSeconds: 3600
+        phoneHomeFailOnTimeout: true
+      cloudConfig: |
+        #cloudconfig
+        rsyslog:
+         remotes:
+          log_serv: "*.* @loginsight.vmwdk.dk:514"
+        package_update: true
+        package_upgrade: true
+        package:
+         - wget
+         - git
+         - curl
+        hostname: '${self.resourceName}'
+        runcmd:
+        #Add Jensenr Public Github key to Autorized_keys
+         - curl https://github.com/rhjensen79.keys >> /root/.ssh/authorized_keys
+        #Change Root password and restart ssh service
+         - echo root:'${input.rootpassword}'|sudo chpasswd
+         - sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g'  /etc/ssh/sshd_config
+         - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g'  /etc/ssh/sshd_config
+         - systemctl restart sshd
+         #install sshpass
+         - apt install sshpass -y
+         #Install docker
+         - apt install docker.io -y
+         - systemctl enable docker
+         #Install k8s
+         - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+         - apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+         - apt install kubeadm -y
+         - swapoff -a
+         #Initialize Kubernetes on the master node
+         - kubeadm init --pod-network-cidr=10.244.0.0/16
+         - kubeadm token create --print-join-command >> /root/join.sh
+         #Copy kube config
+         - mkdir -p /root/.kube
+         - cp -i /etc/kubernetes/admin.conf /root/.kube/config
+             
+  k8s_node:
+    type: Cloud.vSphere.Machine
+    dependsOn:
+      - k8s_master
+    properties:
+      image: '${input.image}'
+      flavor: '${input.flavor}'
+      count: '${input.novm}'
+      name: '${self.resourceName}'
+      constraints:
+        - tag: 'pool:k8s'
+      cloudConfigSettings:
+        #Making sure that cloudconfig is finished, before continue
+        phoneHomeShouldWait: true
+        phoneHomeTimeoutSeconds: 3600
+        phoneHomeFailOnTimeout: true
+      cloudConfig: |
+        #cloudconfig
+        rsyslog:
+         remotes:
+          log_serv: "*.* @loginsight.vmwdk.dk:514"
+        package_update: true
+        package_upgrade: true
+        package:
+         - wget
+         - git
+         - curl
+        hostname: '${self.resourceName}'
+        runcmd:
+        #Add Jensenr Public Github key to Autorized_keys
+         - curl https://github.com/rhjensen79.keys >> /root/.ssh/authorized_keys
+        #Change Root password and restart ssh service
+         - echo root:'${input.rootpassword}'|sudo chpasswd
+         - sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g'  /etc/ssh/sshd_config
+         - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g'  /etc/ssh/sshd_config
+         - systemctl restart sshd
+         #install sshpass
+         - apt install sshpass -y
+         #Install docker
+         - apt install docker.io -y
+         - systemctl enable docker
+         #Install k8s
+         - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+         - apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+         - apt install kubeadm -y
+         - swapoff -a
+         #copy join command
+         - sshpass -p '${input.rootpassword}' scp -o StrictHostKeyChecking=no root@\${k8s_master.address}:/root/join.sh /root/join.sh
+         - chmod +x /root/join.sh
+         - /root/join.sh
+         - sleep 300s
+         #get kube config
+         - mkdir -p /root/.kube
+         - sshpass -p '${input.rootpassword}' scp -o StrictHostKeyChecking=no root@\${k8s_master.address}:/etc/kubernetes/admin.conf /root/.kube/config
+         #Install flannel
+         - wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+         - kubectl apply -f kube-flannel.yml
+         #Install MetalLB
+         - wget https://raw.githubusercontent.com/google/metallb/v0.8.1/manifests/metallb.yaml
+         - kubectl apply -f metallb.yaml
+         #Deploy demo apt
+         - kubectl run hello-world-2 --replicas=2 --labels="run=load-balancer-example-2" --image=gcr.io/google-samples/node-hello:1.0  --port=8080
+         - kubectl expose deployment hello-world-2 --type="LoadBalancer" --name="hello-world-svc"
