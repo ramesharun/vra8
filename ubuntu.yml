@@ -1,0 +1,101 @@
+name: ubuntu
+version: 4.6.4
+#Added liagent
+inputs:
+  rootpassword:
+    type: string
+    encrypted: true
+    title: Root Password
+    description: Root Password
+    default: VMware1!
+  novm:
+    type: integer
+    description: Number of VM's 1-5
+    title: No. of VM's
+    default: 1
+    maximum: 5
+  image:
+    type: string
+    description: Image
+    title: OS Image
+    enum:
+      - ubuntu
+    default: ubuntu
+  flavor:
+    type: string
+    enum:
+      - small
+      - medium
+      - large
+    description: Size of VM's
+    title: VM Size
+    default: small
+  region:
+    type: string
+    description: Region
+    title: Region
+    oneOf:
+      - title: Copenhagen (vSphere)
+        const: 'region:copenhagen'
+      - title: Frankfurt (AWS)
+        const: 'region:frankfurt'
+      - title: Stockholm (AWS)
+        const: 'region:stockholm'
+      - title: Ireland (Azure)
+        const: 'region:ireland'
+      - title: Nederlands (GCP)
+        const: 'region:netherlands'
+    default: 'region:copenhagen'
+  notify:
+    type: boolean
+    title: Notify
+    description: Notify when deployment is finished
+  update:
+    type: boolean
+    title: Update
+    description: Update all packages on VM
+    default: true
+resources:
+  Cloud_Machine_1:
+    type: Cloud.Machine
+    properties:
+      notify: '${input.notify}'
+      name: '${self.resourceName}'
+      image: '${input.image}'
+      flavor: '${input.flavor}'
+      count: '${input.novm}'
+      constraints:
+        - tag: '${input.region}'
+      tags:
+        - key: name
+          value: linux
+      cloudConfigSettings: null
+      #Making sure that cloudconfig is finished, before continue
+      #        phoneHomeShouldWait: true
+      #        phoneHomeTimeoutSeconds: 600
+      #        phoneHomeFailOnTimeout: true
+      cloudConfig: |
+        #cloudconfig
+        #rsyslog:
+        # remotes:
+        #  log_serv: "*.* @syslog.vmwdk.dk:514"
+        package_update: '${input.update}'
+        package_upgrade: '${input.update}'
+        package:
+         - wget
+         - git
+        hostname: '${self.resourceName}'
+        runcmd:
+        #Add Jensenr Public Github key to Autorized_keys
+         - curl https://github.com/rhjensen79.keys >> /root/.ssh/authorized_keys
+        #Change Root password and restart ssh service
+         - echo root:'${input.rootpassword}'|sudo chpasswd
+         - sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g'  /etc/ssh/sshd_config
+         - sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g'  /etc/ssh/sshd_config
+         - systemctl restart sshd
+        #Install Wavefront agent
+         - wget -O - https://raw.githubusercontent.com/rhjensen79/vmwdk_cas/master/scripts/wavefront_agent.sh | bash
+         #Install Log Insight Agent
+         - curl -k -o /tmp/liagent-current.deb https://cmpli.vmwdk.dk/api/v1/agent/packages/types/deb; dpkg -i /tmp/liagent-current.deb
+         - sed -i 's/;hostname=LOGINSIGHT/hostname=syslog.vmwdk.dk/g' /etc/liagent.ini
+         - /etc/init.d/liagentd restart
