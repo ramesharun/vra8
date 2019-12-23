@@ -1,0 +1,29 @@
+#Demo blueprint for CodeStream
+name: webbuild
+version: 1.9.4
+#Changed version
+inputs: {}
+resources:
+  Cloud_Machine_1:
+    type: Cloud.Machine
+    properties:
+      notify: 'no'
+      image: ubuntu
+      flavor: medium
+      constraints:
+        - tag: 'region:frankfurt'
+      cloudConfigSettings:
+        #Making sure that cloudconfig is finished, before continue
+        phoneHomeShouldWait: true
+        phoneHomeTimeoutSeconds: 600
+        phoneHomeFailOnTimeout: true
+      cloudConfig: |
+        #cloudconfig
+        runcmd:
+        #Add Jensenr Public Github key to Autorized_keys
+         - curl https://github.com/rhjensen79.keys >> /root/.ssh/authorized_keys
+        #Change Root password and restart ssh service
+         - echo root:changeme|sudo chpasswd
+         - sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g'  /etc/ssh/sshd_config
+         - sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g'  /etc/ssh/sshd_config
+         - systemctl restart sshd
