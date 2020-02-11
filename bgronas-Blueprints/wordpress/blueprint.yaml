@@ -1,5 +1,5 @@
 name: wordpress
-version: 2.0.0
+version: 2.0.1
 #Changed version
 iteration: 1
 description: More Complex BP with External Storage
@@ -17,17 +17,17 @@ inputs:
     description: Region
     title: Region
     oneOf:
-      - title: Copenhagen (vSphere)
-        const: 'region:copenhagen'
+      - title: Tamburveien (vSphere)
+        const: 'region:tamburveien'
       - title: Frankfurt (AWS)
         const: 'region:frankfurt'
       - title: Stockholm (AWS)
         const: 'region:stockholm'
       - title: Ireland (Azure)
         const: 'region:ireland'
-      - title: Nederlands (GCP)
-        const: 'region:netherlands'
-    default: 'region:copenhagen'
+      - title: Finland (GCP)
+        const: 'region:finland'
+    default: 'region:tamburveien'
   username:
     type: string
     minLength: 4
@@ -100,7 +100,7 @@ resources:
     type: Cloud.Machine
     properties:
       name: wordpress
-      image: ubuntu1604
+      image: ubuntu
       count: 1
       flavor: small
       networks:
