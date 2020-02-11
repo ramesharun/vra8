@@ -1,5 +1,5 @@
 formatVersion: 1
-version: 1.0.0
+version: 1.0.1
 name: Nginx on Ubuntu or CentOS
 description: Installs Ngnix on Ubuntu and CentOS
 inputs:
