@@ -1,0 +1,129 @@
+formatVersion: 1
+version: 0.0.1
+name: Deploy-Machines
+inputs:
+  servername:
+    type: string
+    description: Input the server name
+    default: server
+    title: Server Name
+    minLength: 2
+    maxLength: 25
+    format: ''
+  count:
+    type: number
+    description: Number of machines to create? (max 25)
+    default: 1
+    title: Number of machines?
+    minimum: 1
+    maximum: 25
+  username:
+    type: string
+    minLength: 4
+    maxLength: 20
+    pattern: '[a-z]+'
+    default: root
+    title: Username
+    description: Username
+  rootpassword:
+    type: string
+    pattern: '[a-z0-9A-Z@#$]+'
+    encrypted: true
+    title: Password
+    default: VMware1!
+    description: Password
+  image:
+    type: string
+    enum:
+      - ubuntu
+      - centos
+      - windows
+    description: Image
+    default: ubuntu
+    title: OS Image
+  flavor:
+    type: string
+    enum:
+      - micro
+      - small
+      - medium
+      - large
+    description: Size of VM's
+    default: small
+    title: VM Size
+  cloud:
+    type: string
+    description: CLOUD
+    default: 'cloud:gcp'
+    title: Cloud
+    oneOf:
+      - title: vSphere
+        const: 'cloud:vsphere'
+      - title: AWS
+        const: 'cloud:aws'
+      - title: AZURE
+        const: 'cloud:azure'
+      - title: GCP
+        const: 'cloud:gcp'
+      - title: Alibaba
+        const: 'cloud:alibaba'
+      - title: VMC on AWS
+        const: 'cloud:vmc'
+  region:
+    type: string
+    description: Region
+    default: 'region:finland'
+    title: Region
+    oneOf:
+      - title: Tamburveien (vSphere)
+        const: 'region:tamburveien'
+      - title: Frankfurt (AWS)
+        const: 'region:frankfurt'
+      - title: Stockholm (AWS)
+        const: 'region:stockholm'
+      - title: Ireland (Azure)
+        const: 'region:ireland'
+      - title: London (Azure)
+        const: 'region:london'
+      - title: Finland (GCP)
+        const: 'region:finland'
+resources:
+  Cloud_Machine_1:
+    type: Cloud.Machine
+    cloudConfig: |
+      #cloudconfig
+      #  log_serv: "*.* @syslog.vmwdk.dk:514"
+      repo_update: true
+      repo_upgrade: all
+      package_update: true
+      package_upgrade: all
+      package:
+       - wget
+       hostname: '${input.servername}'
+                - echo root:changeme|sudo chpasswd
+       - sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g'  /etc/ssh/sshd_config
+       - sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g'  /etc/ssh/sshd_config
+       - service sshd restart
+       - sudo apt-get -y update && apt-get upgrade -y
+    properties:
+      image: '${input.image}'
+      flavor: '${input.flavor}'
+      name: '${input.servername}'
+      count: '${input.count}'
+      cloud: '${input.cloud}'
+      region: '${input.region}'
+      hostname: '${input.servername}'
+      constraints:
+        - tag: '${input.region}'
+        - tag: '${input.cloud}'
+      tags:
+        - value: '${input.servername}'
+          key: name
+        - value: '${input.servername}'
+          key: hostname
+      networks:
+        - network: '${resource.Cloud_Network_1.id}'
+  Cloud_Network_1:
+    type: Cloud.Network
+    properties:
+      networkType: existing
