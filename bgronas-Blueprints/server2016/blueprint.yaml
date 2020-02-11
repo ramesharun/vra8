@@ -1,5 +1,5 @@
 name: server2016
-version: 0.9
+version: 2.0.0
 #added custom password
 inputs:
   image:
