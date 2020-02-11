@@ -1,6 +1,6 @@
 #Demo blueprint for CodeStream
-name: webbuild
-version: 2.0.0
+version: 2.0.1
+name: web_build
 #Changed version
 inputs: {}
 resources:
