@@ -1,5 +1,5 @@
 name: WordpressStack-CloudAgnostic
-version: 3
+version: 2.0.2
 iteration: 1
 description: A Complex BP with External Storage
 inputs:
