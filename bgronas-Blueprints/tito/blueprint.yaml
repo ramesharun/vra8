@@ -1,5 +1,5 @@
 formatVersion: 1
-version: 2.0.1
+version: 2.0.3
 inputs:
   code:
     type: string
@@ -17,7 +17,7 @@ resources:
       image: CentOS
       flavor: Small
       constraints:
-        - tag: 'location:frankfurt'
+        - tag: 'location:vsphere'
       networks:
         - network: '${resource.Public_Nw.id}'
       cloudConfig: |
