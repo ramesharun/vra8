@@ -1,0 +1,86 @@
+formatVersion: 1
+version: 1.0.1
+name: Gunnar-Gronas
+inputs:
+  cpuCount:
+    type: integer
+    description: Number of vCPUs
+    default: 1
+    #    title: ''
+    minimum: 1
+    maximum: 8
+  totalMemoryMB:
+    type: integer
+    description: Amount of RAM in MB
+    default: 1024
+    minimum: 512
+    maximum: 32768
+  username:
+    type: string
+    description: Username
+    default: testUser
+    title: Username
+  password:
+    type: string
+    description: Password for the given username
+    default: VMware1!
+    title: Password
+    encrypted: true
+  capacityGb:
+    type: integer
+    description: Disk capacity in GB
+    default: 10
+    minimum: 10
+resources:
+  Cloud_vSphere_Network:
+    type: Cloud.vSphere.Network
+    properties:
+      networkType: existing
+  Cloud_vSphere_Machine_1:
+    type: Cloud.vSphere.Machine
+    properties:
+      name: ggtest
+      imageRef: 'https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.ova'
+      cpuCount: '${input.cpuCount}'
+      totalMemoryMB: '${input.totalMemoryMB}'
+      tags:
+        - key: Guest OS
+          value: Linux
+      cloudConfig: |
+        ssh_pwauth: yes
+        chpasswd:
+          list: |
+            ${input.username}:${input.password}
+          expire: false
+        users:
+          - default
+          - name: ${input.username}
+            lock_passwd: false
+            sudo: ['ALL=(ALL) NOPASSWD:ALL']
+            groups: [wheel, sudo, admin]
+            shell: '/bin/bash'
+        runcmd:
+          - echo "Defaults:${input.username} !requiretty" >> /etc/sudoers.d/${input.username}
+          - wget http://90000v-depot001.services.xaas.no/VMware/vRealize%20Log%20Insight/8.1.1/Agent/vmware-log-insight-agent_8.1.0-15876228_all_172.18.42.100.deb
+          - rpm -i vmware-log-insight-agent_8.1.0-15876228_all_172.18.42.100.rpm
+          - echo 'ssl = no' >> /var/lib/loginsight-agent/liagent.ini
+          - apt-get update && apt-get upgrade -y
+      attachedDisks:
+        - source: '${resource.Cloud_vSphere_Disk_1.id}'
+      #      resourceGroupName: myfolder
+      networks:
+        - network: '${resource.Cloud_vSphere_Network.id}'
+      count: 1
+      constraints:
+        #   - tag: 'Guest OS:Linux'
+        - tag: 'env:vsphere'
+  Cloud_vSphere_Disk_1:
+    type: Cloud.vSphere.Disk
+    properties:
+      name: DISK_001
+      #      type: SSD - not...
+      dataStore: ISCSI_Datastore
+      capacityGb: '${input.capacityGb}'
+      provisioningType: thin
+      maxDiskCapacityInGB: 30
+      count: 1
