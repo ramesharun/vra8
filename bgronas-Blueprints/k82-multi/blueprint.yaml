@@ -4,7 +4,7 @@
 # https://vmguru.com/author/dimitri/               #
 ####################################################
 name: K8s-Multi-node-Cluster
-version: 5.0.0
+version: 5.0.1
 inputs:
   rootpassword:
     type: string
