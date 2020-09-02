@@ -1,0 +1,124 @@
+name: LinuxServer
+version: 1.0.0
+#Bengt Grønås
+inputs:
+  rootpassword:
+    type: string
+    encrypted: true
+    title: Root Password
+    description: Root Password
+    default: VMware1!
+  novm:
+    type: integer
+    description: Number of VM's 1-5
+    title: No. of VM's
+    default: 1
+    maximum: 10
+  image:
+    type: string
+    description: Image
+    title: OS Image
+    enum:
+      - ubuntu
+      - centos
+    default: ubuntu
+  sla:
+    type: string
+    description: Service Level Agreement
+    title: SLA
+    oneOf:
+      - title: Production
+        const: 'network:production'
+      - title: Developer
+        const: 'network:developer'
+    default: 'network:production'
+  flavor:
+    type: string
+    enum:
+      - small
+      - medium
+    description: VM size
+    title: VM Size
+    default: small
+  region:
+    type: string
+    description: Region
+    title: Region
+    oneOf:
+      - title: Oslo (vSphere)
+        const: 'region:oslo'
+      - title: Stockholm (Azure)
+        const: 'region:stockholm'
+      - title: Finland (GCP)
+        const: 'region:finland'
+    default: 'region:oslo'
+  requestid:
+    type: string
+    description: Request ID for approval
+    title: Request ID
+    default: 123456
+  notify:
+    type: boolean
+    title: Notify
+    description: Notify when deployment is finished
+  update:
+    type: boolean
+    title: Update
+    description: Update all packages on VM
+    default: true
+resources:
+  VM:
+    type: Cloud.Machine
+    properties:
+      #---Custom VM Properties---
+      projectname: '${env.projectName}'
+      deploymentname: '${env.deploymentName}'
+      blueprintname: '${env.blueprintName}'
+      blueprintversion: '${env.blueprintVersion}'
+      #---Custom VM Properties---
+      notify: '${input.notify}'
+      name: '${self.resourceName}'
+      image: '${input.image}'
+      flavor: '${input.flavor}'
+      count: '${input.novm}'
+      constraints:
+        - tag: '${input.region}'
+      tags:
+        - key: name
+          value: linux
+        - key: requestid
+          value: '${input.requestid}'
+      cloudConfigSettings: null
+      #Making sure that cloudconfig is finished, before continue
+      #        phoneHomeShouldWait: true
+      #        phoneHomeTimeoutSeconds: 600
+      #        phoneHomeFailOnTimeout: true
+      cloudConfig: |
+        package_update: '${input.update}'
+        package_upgrade: '${input.update}'
+        package:
+         - wget
+         - git
+        hostname: '${self.resourceName}'
+        runcmd:
+        #Add Public Github key to Autorized_keys
+         - curl https://github.com/'${self.github}'.keys >> /root/.ssh/authorized_keys
+        #Change Root password and restart ssh service
+         - echo root:'${input.rootpassword}'|sudo chpasswd
+         - sed -i 's/#PasswordAuthentication no/PasswordAuthentication yes/g'  /etc/ssh/sshd_config
+         - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g'  /etc/ssh/sshd_config
+         - systemctl restart sshd
+        #Install Log Insight Agent
+         # - curl -k -o /tmp/liagent-current.deb http://ci-data-collector.s3.amazonaws.com/VMware-LI-Agent-8-0-0-14743436/vmware-log-insight-agent_8.0.0-14743436_all.deb; dpkg -i /tmp/liagent-current.deb
+         # - sed -i 's/;hostname=LOGINSIGHT/hostname=syslog.cmplab.dk/g' /etc/liagent.ini
+         # - sed -i 's/;ssl=yes/ssl=no/g' /etc/liagent.ini
+         # - /etc/init.d/liagentd restart
+         - reboot
+      networks:
+        - network: '${resource.Network.id}'
+  Network:
+    type: Cloud.Network
+    properties:
+      networkType: existing
+      constraints:
+        - tag: '${input.sla}'
