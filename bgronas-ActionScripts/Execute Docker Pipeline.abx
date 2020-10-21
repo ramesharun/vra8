@@ -1,0 +1,13 @@
+---
+exportVersion: "1"
+exportId: "8a768e9e6a208ded016a6831e0bc39af"
+name: "Execute Docker Pipeline"
+runtime: "python"
+entrypoint: "handler"
+inputs:
+  target: "World"
+timeoutSeconds: 180
+deploymentTimeoutSeconds: 600
+actionType: "SCRIPT"
+provider: "aws"
+memoryInMB: 150

@@ -1,0 +1,11 @@
+---
+exportVersion: "1"
+exportId: "8a5ec6257223a2830172807cb6cc18a8"
+name: "Get_Github_UserName"
+runtime: "python"
+entrypoint: "handler"
+timeoutSeconds: 180
+deploymentTimeoutSeconds: 600
+actionType: "SCRIPT"
+provider: "aws"
+memoryInMB: 300

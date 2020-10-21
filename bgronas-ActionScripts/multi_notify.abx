@@ -1,0 +1,25 @@
+---
+exportVersion: "1"
+exportId: "8a5ec6257223a283017255c007f260d8"
+name: "multi_notify"
+runtime: "python"
+entrypoint: "handler"
+inputs:
+  smtp_port: 465
+  smtp_server: "email-smtp.eu-central-1.amazonaws.com"
+  slack_webhook: "https://hooks.slack.com/services/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"
+  smtp_password: "BEE3jG4TgLmJnWijP2wDqEA+3omAtFeHunSS6A2ZlUvP"
+  smtp_username: "AKIA4APOUURWRWEZBFLE"
+  teams_webhook: "https://outlook.office.com/webhook/2e219b39-08cf-447c-8d29-3853001e845f@b39138ca-3cee-4b4a-a4d6-cd83d9dd62f0/IncomingWebhook/4caee1b8c8eb4317a385b5a9f01d8044/8d541aed-a7e6-42f0-802b-11cbf3555fad"
+  telegram_token: "1195792760:AAH7TbeTfH0e_Yoth9LpusT8KsQXeeQcO_I"
+  telegram_chatid: -402369841
+  notificationtype: "telegram"
+  smtp_sender_email: "vra@cmplab.dk"
+timeoutSeconds: 180
+deploymentTimeoutSeconds: 600
+dependencies: "requests\n\n"
+actionType: "SCRIPT"
+provider: "on-prem"
+configuration:
+  const_azure-system_managed_identity: false
+memoryInMB: 300

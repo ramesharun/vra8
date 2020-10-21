@@ -1,0 +1,15 @@
+---
+exportVersion: "1"
+exportId: "8a5eb9be6f0b54b1016f105d12c41f2b"
+name: "Delete Deployment"
+runtime: "python"
+entrypoint: "handler"
+timeoutSeconds: 180
+deploymentTimeoutSeconds: 600
+actionType: "SCRIPT"
+provider: "aws"
+configuration:
+  const-providers:
+  - "aws"
+  const_azure-system_managed_identity: false
+memoryInMB: 150

@@ -1,0 +1,14 @@
+---
+exportVersion: "1"
+exportId: "8a5e8d207223a2620172290fcdc0472b"
+name: "ad_update"
+runtime: "python"
+entrypoint: "handler"
+timeoutSeconds: 180
+deploymentTimeoutSeconds: 600
+dependencies: "pywinrm"
+actionType: "SCRIPT"
+provider: "on-prem"
+configuration:
+  const_azure-system_managed_identity: false
+memoryInMB: 300

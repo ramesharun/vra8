@@ -1,0 +1,14 @@
+---
+exportVersion: "1"
+exportId: "8a5e85f073564ffd0173c016c26c5b04"
+name: "CMPvalue"
+runtime: "python"
+entrypoint: "handler"
+timeoutSeconds: 600
+deploymentTimeoutSeconds: 900
+dependencies: "boto3"
+actionType: "SCRIPT"
+provider: "aws"
+configuration:
+  const_aws-iam_role: "DynamoDB"
+memoryInMB: 300

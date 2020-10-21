@@ -1,0 +1,11 @@
+---
+exportVersion: "1"
+exportId: "8a7698386ed1d8ec016ed2aa74790303"
+name: "update thinkspeak"
+runtime: "python"
+entrypoint: "handler"
+timeoutSeconds: 180
+deploymentTimeoutSeconds: 600
+actionType: "SCRIPT"
+provider: "aws"
+memoryInMB: 150
