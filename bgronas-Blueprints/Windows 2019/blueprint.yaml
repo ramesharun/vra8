@@ -1,0 +1,79 @@
+name: Windows 2019
+version: 0.0.9
+#Added custom properties
+inputs:
+  sla:
+    type: string
+    description: Service Level Agreement
+    title: SLA
+    oneOf:
+      - title: Production
+        const: 'network:production'
+      - title: Test
+        const: 'network:test'
+    default: 'network:production'
+  joindomain:
+    type: string
+    description: Join Domain
+    title: Join Domain
+    oneOf:
+      - title: 'Yes'
+        const: T3
+      - title: 'No'
+        const: server2019_noad
+    default: T3
+  flavor:
+    type: string
+    enum:
+      - small
+      - medium
+      - large
+    description: Size of VM's
+    title: VM Size
+    default: medium
+  novm:
+    type: integer
+    description: Number of VM's 1-10
+    title: No. of VM's
+    default: 1
+    maximum: 10
+  notify:
+    type: boolean
+    title: Notify
+    description: Notify when deployment is finished
+  requestid:
+    type: string
+    description: Request ID for approval
+    title: Request ID
+    default: 123456
+resources:
+  Windows2019:
+    type: Cloud.Machine
+    properties:
+      #---Custom VM Properties---
+      projectname: '${env.projectName}'
+      deploymentname: '${env.deploymentName}'
+      blueprintname: '${env.blueprintName}'
+      blueprintversion: '${env.blueprintVersion}'
+      #---Custom VM Properties---
+      count: '${input.novm}'
+      notify: '${input.notify}'
+      name: '${self.resourceName}'
+      image: win2019
+      flavor: medium
+      customizationSpec: '${input.joindomain}'
+      constraints:
+        - tag: 'cloud:vsphere'
+      networks:
+        - network: '${resource.Network.id}'
+      tags:
+        - key: name
+          value: windows
+        - key: requestid
+          value: '${input.requestid}'
+  Network:
+    type: Cloud.vSphere.Network
+    properties:
+      networkType: existing
+      constraints:
+        - tag: '${input.sla}'
