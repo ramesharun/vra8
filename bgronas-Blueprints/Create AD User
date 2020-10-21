@@ -1,0 +1,30 @@
+name: Create AD User
+version: 1.0.0
+#First Github Version
+description: Create user in Active Directory
+formatVersion: 1
+inputs:
+  password:
+    type: string
+    default: VMware1!
+    title: Password
+    encrypted: true
+  account:
+    type: string
+    title: Account Name
+  display:
+    type: string
+    title: Display Name
+  changeatlogon:
+    type: boolean
+    title: Change Password at next Logon
+    default: true
+resources:
+  Custom_ad_user_1:
+    type: Custom.ad.user
+    properties:
+      accountName: '${input.account}'
+      displayName: '${input.display}'
+      changePasswordAtNextLogon: '${input.changeatlogon}'
+      password: '${input.password}'
+      confirmPassword: '${input.password}'
