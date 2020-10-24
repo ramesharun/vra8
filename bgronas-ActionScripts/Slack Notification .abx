@@ -1,0 +1,13 @@
+---
+exportVersion: "1"
+exportId: "8a5edd0a7031647601703462d0ed1954"
+name: "Slack Notification "
+runtime: "python"
+entrypoint: "handler"
+inputs:
+  webhook_url: "https://slack.com/share/ITU7NG0G4/PqCs9sQ6LbPH0CiaYe3L3mvB/enQtOTQ2MjYwNTQ0NTQ4LWJiOTBmZWY5ZjVhYzY5OTMyZDkwOTY3NzE3MzczNmM2ZDg1MTc4MTllZTc2ZjgzMjE5NTRkZGNhOTNiNDlmYjY"
+timeoutSeconds: 180
+deploymentTimeoutSeconds: 600
+actionType: "SCRIPT"
+provider: "on-prem"
+memoryInMB: 150
