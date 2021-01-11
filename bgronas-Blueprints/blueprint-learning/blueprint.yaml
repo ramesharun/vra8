@@ -17,8 +17,7 @@ info: |
   Dette er en multi-linje "kommentar"
   den starter  bare med "tag'en" slik som 
   ovenfor og har en kolon og en pipe
-  etter seg, og dette kan du gjøre 
-  hvor som helst i cloud templaten
+  etter seg
 more-info: |
   f.eks. her hvor jeg bare la inn
   more info.
@@ -28,14 +27,14 @@ more-info: |
 # 
 #-------- NAME -----------------------------#
 name: Instruktiv cloud template
-version: 1.0.0
+version: 2.0.0
 formatVersion: 1
 #-------- INPUTS -----------------------------#
 inputs:
   servername:
     type: string
     description: The name for the VM created when the machine is provisioned
-    default: UIT-JFS-w2019
+    default: bgr
     title: server name
     minLength: 2
     maxLength: 15
@@ -47,11 +46,11 @@ inputs:
     title: Image spec
     # --- demo på vennlige navn vs. konstanten det representerer --- #
     oneOf:
-      - title: CentOS hos Bengt
+      - title: CentOS (built on RHEL)
         const: centos
-      - title: 'friendly looking Ubuntu :-)'
+      - title: 'awesome Ubuntu :-)'
         const: ubuntu
-      - title: Windows 2019 kickass
+      - title: Windows 2019 server
         const: windows
   flavor:
     type: string
@@ -73,17 +72,17 @@ inputs:
   environment:
     type: string
     description: 'Select the development, testing, or production environment .'
-    default: 'env:prod'
+    default: 'env:vsphere'
     title: Environment
     oneOf:
       - title: '* ANY *'
         const: ''
-      - title: Etviklingsmiljø
-        const: 'env:dev'
+      - title: Utviklingsmiljø
+        const: 'env:vsphere'
       - title: Test miljø
-        const: 'env:test'
+        const: 'env:gcp'
       - title: Produksjon
-        const: 'env:prod'
+        const: 'env:azure'
   network:
     type: string
     description: Velg nettverk.
@@ -160,19 +159,19 @@ inputs:
       - title: Default / ikke oppgitt
         const: DEPLOYMENTS
   cpu:
-    type: string
+    type: integer
     pattern: '[0-9$]+'
     title: Antall CPU
     default: 2
     description: Antall CPU ønsket
   disk:
-    type: string
+    type: integer
     pattern: '[0-9$]+'
     title: Disk Size i GB
     default: 20
     description: Disk-Size ønsket
   mem:
-    type: string
+    type: integer
     pattern: '[0-9$]+'
     title: Minne Size i MB
     default: 2048
@@ -270,8 +269,8 @@ resources:
       # men bare godta default plassering
       constraints:
         - tag: '${input.cloud}'
-        - tag: '${input.region}'
-        - tag: '${input.environment}'
+      #        - tag: '${input.region}'
+      #        - tag: '${input.env}'
       # 
       # CLOUD CONFIG 
       # 
@@ -286,9 +285,9 @@ resources:
           - epel-release
         runcmd:
           - mkdir /root/.ssh
-          - curl -k -o /tmp/liagent-current.rpm https://yourserver.domain.local:9000/api/v1/agent/packages/types/rpm
+          - curl -k -o /tmp/liagent-current.rpm https://vrli01.t3.local:9000/api/v1/agent/packages/types/rpm
           - rpm -Uvh /tmp/liagent-current.rpm
-          - sed -i 's/;hostname=LOGINSIGHT/hostname=yourserver.domain.local/g' /etc/liagent.ini
+          - sed -i 's/;hostname=LOGINSIGHT/hostname=vrli01.t3.local/g' /etc/liagent.ini
           - sed -i 's/;ssl=yes/ssl=no/g' /etc/liagent.ini
           - /etc/init.d/liagentd restart
           - hostnamectl set-hostname '${input.servername}' --transient
@@ -301,5 +300,5 @@ resources:
     type: Cloud.vSphere.Network
     properties:
       networkType: existing
-      constraints:
-        - tag: '${input.network}'
+#       constraints:
+#        - tag: '${input.network}'
