@@ -1,0 +1,304 @@
+# ----------------------------------------------------------
+#         BENGT GRØNÅS  VMware Norge                       
+#             https://blog.bengt.no                         
+# LinkedIn:  https://bit.ly/bgronas-linkedin               
+# Twitter:    https://bit.ly/bgronas-twitter               
+# Automation User Group: https://autoug.io                 
+# 
+# Fjern dette og legginn ditt eget. Bra for å
+# få en oversikt over blue-printen
+# Dette er forøvrig slik døde kommentarer ser ut
+# ---------------------------------------------------------- 
+#   VMware Cloud Assemply Blueprint Code Sample
+#   VMware Cloud Assemply Cloud Template Code Sample 
+# 
+# 
+info: |
+  Dette er en multi-linje "kommentar"
+  den starter  bare med "tag'en" slik som 
+  ovenfor og har en kolon og en pipe
+  etter seg, og dette kan du gjøre 
+  hvor som helst i cloud templaten
+more-info: |
+  f.eks. her hvor jeg bare la inn
+  more info.
+  Min defaulte indentering mellom en tag og det som kommer under
+  er stk. space. Forsøk å unngå TAB i YAML kode
+# 
+# 
+#-------- NAME -----------------------------#
+name: Instruktiv cloud template
+formatVersion: 1
+#-------- INPUTS -----------------------------#
+inputs:
+  servername:
+    type: string
+    description: The name for the VM created when the machine is provisioned
+    default: UIT-JFS-w2019
+    title: server name
+    minLength: 2
+    maxLength: 15
+    pattern: '^[a-zA-Z0-9\-\_]+$'
+  image:
+    type: string
+    description: <b> Select Image </b>
+    default: ubuntu
+    title: Image spec
+    # --- demo på vennlige navn vs. konstanten det representerer --- #
+    oneOf:
+      - title: CentOS hos Bengt
+        const: centos
+      - title: 'friendly looking Ubuntu :-)'
+        const: ubuntu
+      - title: Windows 2019 kickass
+        const: windows
+  flavor:
+    type: string
+    default: small
+    enum:
+      - small
+      - medium
+      - large
+    # 
+    # den description som kommer her får man frem når man trykker 
+    # "i" for informasjon i den man kjører en deploy
+    description: |-
+      Select the size of the deployment.
+      Small =  1 CPU - 2 GB RAM, 
+      Medium = 2 CPU - 4 GB RAM, 
+      Large = 2 CPU - 8 GB RAM
+      default: small
+    title: VM flavour (Size)
+  environment:
+    type: string
+    description: 'Select the development, testing, or production environment .'
+    default: 'env:prod'
+    title: Environment
+    oneOf:
+      - title: '* ANY *'
+        const: ''
+      - title: Etviklingsmiljø
+        const: 'env:dev'
+      - title: Test miljø
+        const: 'env:test'
+      - title: Produksjon
+        const: 'env:prod'
+  network:
+    type: string
+    description: Velg nettverk.
+    default: 'network:vlan100'
+    title: Network selection
+    oneOf:
+      - title: 'VLAN 100 [test]'
+        const: 'network:vlan100'
+      - title: 'VLAN 200 [dev]'
+        const: 'network:vlan200'
+      - title: 'VLAN 300 [staging]'
+        const: 'network:vlan300'
+      - title: 'VLAN 750 [prod]'
+        const: 'network:vlan750'
+  cloud:
+    type: string
+    description: CLOUD
+    default: 'env:vsphere'
+    title: Cloud
+    oneOf:
+      - title: vSphere
+        const: 'env:vsphere'
+      - title: AWS
+        const: 'env:aws'
+      - title: AZURE
+        const: 'env:azure'
+      - title: GCP
+        const: 'env:gcp'
+      - title: Alibaba
+        const: 'env:alibaba'
+      - title: VMC on AWS
+        const: 'env:vmc'
+  region:
+    type: string
+    description: Region
+    default: 'region:oslo'
+    title: Region
+    oneOf:
+      - title: OSLO (vSphere)
+        const: 'region:oslo'
+      - title: Frankfurt (AWS)
+        const: 'region:frankfurt'
+      - title: Stockholm (AWS)
+        const: 'region:stockholm'
+      - title: London (Azure)
+        const: 'region:london'
+      - title: Finland (GCP)
+        const: 'region:finland'
+  username:
+    type: string
+    minLength: 4
+    maxLength: 20
+    pattern: '[a-z]+'
+    default: root
+    title: Username
+    description: Username
+  foldername:
+    type: string
+    minLength: 4
+    maxLength: 20
+    # pattern: '[a-z]+'
+    default: DEPLOYMENTS
+    title: Folder Name
+    description: Folder Name
+    oneOf:
+      - title: Elev organisasjonen
+        const: ELEV-DEPT
+      - title: Finans avdelingen
+        const: FINANCE-DEPT
+      - title: IT Avdelingen
+        const: IT-DEPT
+      - title: HR Avdelingen
+        const: HR-DEPT
+      - title: Default / ikke oppgitt
+        const: DEPLOYMENTS
+  cpu:
+    type: string
+    pattern: '[0-9$]+'
+    title: Antall CPU
+    default: 2
+    description: Antall CPU ønsket
+  disk:
+    type: string
+    pattern: '[0-9$]+'
+    title: Disk Size i GB
+    default: 20
+    description: Disk-Size ønsket
+  mem:
+    type: string
+    pattern: '[0-9$]+'
+    title: Minne Size i MB
+    default: 2048
+    description: Minne ønsket (MB)
+  rootpassword:
+    type: string
+    pattern: '[a-z0-9A-Z@#$]+'
+    encrypted: true
+    title: Password
+    default: VMware1!
+    description: Password
+  notify:
+    type: boolean
+    description: Notify when deployment is finished
+    default: true
+    title: Notify when finished
+  count:
+    type: integer
+    description: <b> Number if VM's </b><br>
+    default: 1
+    title: Number of deployments
+    minimum: 1
+    maximum: 10
+#-------- RESOURCES  -----------------------------#
+resources:
+  vSphereVM:
+    type: Cloud.vSphere.Machine
+    name: HAL2000
+    properties:
+      # 
+      # hvilken template skal vi lage VM av?
+      image: '${input.image}'
+      # 
+      # 
+      # Bare Et Lite Notat: 
+      # 
+      # Hva gjøres med cpuCount og totalMEmoryMB istedet for 
+      # å putte inn flavour??
+      #  de kan ikke mikses, så de må brukes hver for seg
+      # enten slik: 
+      #      flavor: small
+      # eller slik: 
+      #      flavor: '${input.flavor}'
+      # 
+      cpuCount: '${input.count}'
+      totalMemoryMB: '${input.mem}'
+      storage:
+        disks:
+          - capacityGb: '${input.disk}'
+      # 
+      # 
+      # inne i vSphere under
+      # Menu->policies and profiles->VM Customization Specifications
+      # der har jeg laget navnet på hver av customization til å hete
+      # centos,ubuntu,windows osv. med små bokstaver
+      # ergo funker dette:
+      customizationSpec: '${input.image}'
+      # 
+      # Denne trenger du ikke, men jeg har tatt den med allikevel
+      snapshotLimit: 3
+      #retryCount: 
+      #resourceLeaseDurationSec: 
+      #ovfProperties: 
+      # 
+      # 
+      # folder name bør hentes inn som en input
+      # bruk string, og la enten folk velge en eksisterende
+      # eller en default en. 
+      folderName: '${input.foldername}'
+      #coreCount: 
+      # Denne trenger du ikke, men jeg har tatt den med allikevel
+      cloneStrategy: FULL
+      # 
+      # Antall maskiner/VM'er 
+      count: '${input.count}'
+      # 
+      # 
+      # NOTE: Denne kan/må defineres i Project 
+      # under Custom Naming, Template, som:
+      # ${resource.hostname}-${####} 
+      hostname: '${input.servername}'
+      # 
+      # 
+      # Disse tag'ene kan man like gjerne få med som input.
+      #  For backup ville jeg kanskje hatt boolean (ja/nei)
+      tags:
+        - key: SLA
+          value: gold
+        - key: BACKUP
+          value: normal
+      # 
+      # 
+      # Constraint *MÅ* være oppfylt, ellers feiler det.
+      # Før alt er på plass kan man unngå disse
+      # men bare godta default plassering
+      constraints:
+        - tag: '${input.cloud}'
+        - tag: '${input.region}'
+        - tag: '${input.environment}'
+      # 
+      # CLOUD CONFIG 
+      # 
+      # dette blir gjort etter maskinen er oppe og kjører
+      # Jeg tok med hele greia som et eksempel
+      cloudConfig: |
+        preserve_hostname: false
+        repo_update: true
+        repo_upgrade: all
+        packages:
+          - wget
+          - epel-release
+        runcmd:
+          - mkdir /root/.ssh
+          - curl -k -o /tmp/liagent-current.rpm https://yourserver.domain.local:9000/api/v1/agent/packages/types/rpm
+          - rpm -Uvh /tmp/liagent-current.rpm
+          - sed -i 's/;hostname=LOGINSIGHT/hostname=yourserver.domain.local/g' /etc/liagent.ini
+          - sed -i 's/;ssl=yes/ssl=no/g' /etc/liagent.ini
+          - /etc/init.d/liagentd restart
+          - hostnamectl set-hostname '${input.servername}' --transient
+          - hostnamectl set-hostname '${input.servername}' --pretty
+          - hostnamectl set-hostname '${input.servername}' --static
+          - hostnamectl set-hostname '${input.servername}'
+      networks:
+        - network: '${resource["vSphere-Net"].id}'
+  vSphere-Net:
+    type: Cloud.vSphere.Network
+    properties:
+      networkType: existing
+      constraints:
+        - tag: '${input.network}'
