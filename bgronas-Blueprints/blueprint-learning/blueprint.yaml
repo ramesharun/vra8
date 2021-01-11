@@ -28,6 +28,7 @@ more-info: |
 # 
 #-------- NAME -----------------------------#
 name: Instruktiv cloud template
+version: 1.0.0
 formatVersion: 1
 #-------- INPUTS -----------------------------#
 inputs:
