@@ -1,0 +1,85 @@
+#--------------------------------------------------------#
+#                     Spas Kaloferov                     #
+#                   www.kaloferov.com                    #
+# bit.ly/The-Twitter      Social     bit.ly/The-LinkedIn #
+# bit.ly/The-Gitlab        Git         bit.ly/The-Github #
+# bit.ly/The-BSD         License          bit.ly/The-GNU #
+#--------------------------------------------------------#
+info: |-
+  #
+  #       VMware Cloud Assembly Custom Resource Code Sample          
+  # 
+  # [Info]
+  #  - Custom Resources Blueprint. Allows users to select OU or hardcode one. 
+  # [Custom Resources]
+  #  - Lifecycle Action Create (Custom.Workflow.AD.User): Create a user with a password in an organizational unit (Workflow)
+  #  - Lifecycle Action Destroy: Destroy a user (Workflow)
+  # 
+name: CR - Create AD User in OU
+version: 1
+#-------------------------INPUTS-------------------------#
+inputs:
+  userName:
+    type: string
+    description: Enter username
+    default: csp001
+    title: Username
+  password:
+    type: string
+    description: Enter Password. Default is VMware1!
+    default: VMware1!
+    title: Password
+    encrypted: true
+  domainName:
+    type: string
+    description: Enter Domain Name
+    default: corp.local
+    title: Domain Name
+  ouChoice:
+    type: string
+    title: AD OU Choice
+    description: Select OU or use default one
+    default: ouchoiceDefault
+    oneOf:
+      - title: Default
+        const: ouchoiceDefault
+      - title: User Selection
+        const: ouchoiceUser
+  ouContainerUser:
+    type: object
+    title: AD OU (User)
+    $data: 'vro/data/inventory/AD:OrganizationalUnit'
+    # Remove default to allow only user choise 
+    default:
+      id: '#_v2_#,#OU#,#2d2b8fac-2483-4785-a484-2a7e8bf4355d#,#OU=Cloud Services Users,DC=corp,DC=local#' # The DunesID and distinguishedName must match environemtn and can be taken from vRO 
+      type: 'AD:OrganizationalUnit' # Sets the Type
+    description: 'Select Active Directory Organizational Unit '
+    properties:
+      id:
+        type: string
+      type:
+        type: string
+  ouContainerDefault:
+    type: object
+    title: AD OU (Default)
+    #$data: 'vro/data/inventory/AD:OrganizationalUnit'
+    properties:
+      id:
+        type: string
+        format: hidden # This will hide the input 
+        default: '#_v2_#,#OU#,#2d2b8fac-2483-4785-a484-2a7e8bf4355d#,#OU=Cloud Services Users,DC=corp,DC=local#' # The DunesID and distinguishedName must match environemtn and can be taken from vRO 
+      type:
+        type: string
+        format: hidden # This will hide the input
+        default: 'AD:OrganizationalUnit' # Sets the Type
+#------------------------RESOURCES-----------------------#
+resources:
+  createAdUser:
+    type: Custom.Workflow.AD.User
+    properties:
+      accountName: '${input.userName}'
+      displayName: '${input.userName}'
+      password: '${input.password}'
+      confirmPassword: '${input.password}'
+      changePasswordAtNextLogon: false
+      ouContainer: '${input.ouChoice == "ouchoiceUser" ? input.ouContainerUser : input.ouContainerDefault}'
